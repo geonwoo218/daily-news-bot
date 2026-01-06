@@ -6,8 +6,6 @@ import os # 운영체제(OS)의 환경변수를 가져오는 도구
 # ==========================================
 # [보안 수정] 코드에 토큰을 직접 적지 않고, 환경변수에서 가져옵니다.
 # 내 컴퓨터에서 테스트할 때만 토큰을 직접 적고, 올릴 땐 지우거나 주석 처리하세요.
-TELEGRAM_TOKEN = "8434795115:AAGx0Hm6b4ZVFJE-GUjXcJUxIFbOsdnnMaU"
-CHAT_ID = "8378751310"
 # ==========================================
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') 
 CHAT_ID = os.environ.get('CHAT_ID')
