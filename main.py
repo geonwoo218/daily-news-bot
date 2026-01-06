@@ -18,8 +18,25 @@ HEADERS = {
 }
 
 # 💰 [내 포트폴리오] 
-MY_PORTFOLIO = os.environ.get('MY_PORTFOLIO')
 MY_PORTFOLIO = [
+    # --- 미국 주식 (US) ---
+    {"name": "리게티 컴퓨팅", "type": "US", "code": "RGTI", "buy_price": 40.74, "qty": 7},
+    {"name": "아이렌(IREN)", "type": "US", "code": "IREN", "buy_price": 55.59, "qty": 2.49},
+    {"name": "QQQ", "type": "US", "code": "QQQ", "buy_price": 607.56, "qty": 0.169},
+    {"name": "엔비디아", "type": "US", "code": "NVDA", "buy_price": 186.15, "qty": 0.538},
+    {"name": "아이온큐", "type": "US", "code": "IONQ", "buy_price": 59.67, "qty": 2.03},
+    {"name": "SPY", "type": "US", "code": "SPY", "buy_price": 667.26, "qty": 0.137},
+    {"name": "메타", "type": "US", "code": "META", "buy_price": 649.34, "qty": 0.142},
+    {"name": "마이크로소프트", "type": "US", "code": "MSFT", "buy_price": 494.76, "qty": 0.194},
+    {"name": "VOO", "type": "US", "code": "VOO", "buy_price": 618.10, "qty": 0.113},
+    {"name": "VTI", "type": "US", "code": "VTI", "buy_price": 330.75, "qty": 0.192},
+    {"name": "TSLL", "type": "US", "code": "TSLL", "buy_price": 19.21, "qty": 3.22},
+    {"name": "알파벳 Class A", "type": "US", "code": "GOOGL", "buy_price": 310.99, "qty": 0.089},
+    {"name": "테슬라", "type": "US", "code": "TSLA", "buy_price": 450.54, "qty": 0.1214},
+    {"name": "오라클", "type": "US", "code": "ORCL", "buy_price": 180.37, "qty": 0.03},
+    {"name": "호멜 푸즈", "type": "US", "code": "HRL", "buy_price": 22.84, "qty": 0.08},
+    {"name": "애플", "type": "US", "code": "AAPL", "buy_price": 279.82, "qty": 0.0051},
+    
     # --- 한국 주식 (KR) ---
     {"name": "카카오", "type": "KR", "code": "035720", "buy_price": 61360, "qty": 1},
     {"name": "KODEX 미국나스닥100", "type": "KR", "code": "379810", "buy_price": 24522, "qty": 2}
