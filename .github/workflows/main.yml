@@ -1,0 +1,36 @@
+name: Daily Economy Briefing
+
+on:
+  schedule:
+    # 매일 한국 시간 아침 8시 실행 (UTC 23:00)
+    # 깃허브는 영국 시간(UTC)을 쓰므로 한국보다 9시간 느리게 설정해야 합니다.
+    # 전날 밤 23시 = 한국 아침 8시
+    - cron: '0 23 * * *'
+  
+  # 수동으로 실행 버튼을 눌러볼 수 있게 해주는 옵션
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v3
+
+      - name: 파이썬 설치하기
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: 라이브러리 설치하기
+        run: |
+          pip install -r requirements.txt
+
+      - name: 봇 실행하기
+        env:
+          # 금고(Secrets)에서 꺼내서 환경변수로 넣어줌
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python main.py
