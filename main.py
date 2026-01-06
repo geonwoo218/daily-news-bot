@@ -18,16 +18,14 @@ HEADERS = {
 }
 
 # 💰 [내 포트폴리오] 
-# 보내주신 이미지의 모든 종목과 평단가, 수량을 완벽하게 반영했습니다.
+MY_PORTFOLIO = os.environ.get('MY_PORTFOLIO')
 MY_PORTFOLIO = [
-
     # --- 한국 주식 (KR) ---
     {"name": "카카오", "type": "KR", "code": "035720", "buy_price": 61360, "qty": 1},
     {"name": "KODEX 미국나스닥100", "type": "KR", "code": "379810", "buy_price": 24522, "qty": 2}
 ]
 
 def get_exchange_rate():
-    """네이버 금융에서 현재 원/달러 환율 가져오기"""
     url = "https://finance.naver.com/marketindex/"
     try:
         res = requests.get(url, headers=HEADERS)
@@ -37,12 +35,11 @@ def get_exchange_rate():
             if data_list:
                 exchange_str = data_list.find("span", class_="value").get_text()
                 return float(exchange_str.replace(",", ""))
-    except Exception as e:
-        print(f"환율 에러: {e}")
-    return 1450.0 # 에러 시 기본값
+    except:
+        pass
+    return 1450.0
 
 def get_kr_stock(code):
-    """네이버 금융에서 한국 주식 현재가 가져오기"""
     url = f"https://finance.naver.com/item/main.naver?code={code}"
     try:
         res = requests.get(url, headers=HEADERS)
@@ -56,102 +53,162 @@ def get_kr_stock(code):
         pass
     return None
 
-def get_us_stock(ticker):
-    """
-    [핵심 변경] yfinance 라이브러리 사용
-    네이버처럼 주소가 바뀌거나 막힐 걱정이 전혀 없습니다.
-    """
+def get_us_stock_data(ticker):
     try:
-        # 야후 파이낸스에서 데이터 로딩
         stock = yf.Ticker(ticker)
-        
-        # 최근 1일치 장마감 데이터(History) 가져오기
-        # 미국 시장이 열려있으면 실시간 가격, 닫혀있으면 종가를 가져옵니다.
-        hist = stock.history(period="1d")
-        
+        hist = stock.history(period="1mo")
         if not hist.empty:
-            # 가장 최근 가격('Close' 컬럼의 마지막 값)
-            return float(hist['Close'].iloc[-1])
-            
-    except Exception as e:
-        print(f"{ticker} 로딩 실패: {e}")
+            return float(hist['Close'].iloc[-1]), hist
+    except:
         pass
-    return None
+    return None, None
+
+def calculate_rsi(data, window=14):
+    delta = data['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=window).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=window).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi.iloc[-1]
+
+def get_investment_opinion(profit_rate, rsi=None):
+    """상황에 따른 조언 생성 (정렬 점수 부여를 위해 키워드 중요)"""
+    opinion = ""
+    # 우선순위 점수 (낮을수록 상단 배치)
+    # 1: 긴급(과매수/과매도/손절)
+    # 2: 주의(물타기/수익실현)
+    # 3: 관망(Hold)
+    priority = 3 
+
+    if rsi is not None:
+        if rsi < 30:
+            if profit_rate < -10:
+                opinion = "🥶과매도 (물타기 기회?)"
+                priority = 1
+            else:
+                opinion = "🥶과매도 (바닥 다지기)"
+                priority = 1
+        elif rsi > 70:
+            if profit_rate > 0:
+                opinion = "🔥과매수 (익절 고려)"
+                priority = 1
+            else:
+                opinion = "📈단기급등 (비중축소/손절고려)"
+                priority = 1
+        else:
+            if profit_rate < -10:
+                opinion = "존버 (반등 기다림..)"
+                priority = 3
+            elif profit_rate > 10:
+                opinion = "순항 중 🚢"
+                priority = 3
+            else:
+                opinion = "⚖️관망 (Hold)"
+                priority = 3
+    else:
+        if profit_rate < -15:
+            opinion = "🚨손절/추매 신중검토"
+            priority = 1
+        elif profit_rate > 15:
+            opinion = "🍬수익실현 고민"
+            priority = 2
+        else:
+            opinion = "🧘Hold"
+            priority = 3
+            
+    return opinion, priority
 
 def analyze_portfolio():
-    report = []
+    # 데이터를 먼저 수집해서 리스트에 담음 (정렬을 위해)
+    portfolio_data = [] 
+    
     total_buy_krw = 0 
     total_now_krw = 0 
-    
-    # 1. 환율 가져오기
     usd_rate = get_exchange_rate()
-    report.append(f"💵 환율: ${usd_rate:,.1f}원\n")
     
-    # 2. 포트폴리오 분석
+    print(f"환율: {usd_rate}")
+
     for stock in MY_PORTFOLIO:
         current_price = 0
-        profit_rate = 0
-        line = ""
+        rsi_val = None
         
-        # 한국 주식
+        # 1. 데이터 수집
         if stock['type'] == "KR":
             price = get_kr_stock(stock['code'])
-            if not price:
-                report.append(f"❌ {stock['name']}: 로딩 실패")
-                continue
-            
+            if not price: continue
             current_price = price
-            # 평가금액 계산
-            current_val = current_price * stock['qty']
-            buy_val = stock['buy_price'] * stock['qty']
-            
-            profit_rate = ((current_price - stock['buy_price']) / stock['buy_price']) * 100
-            
-            # 출력 포맷
-            line = f"🇰🇷 {stock['name']}: {current_price:,}원 ({profit_rate:+.1f}%)"
-            
-            total_buy_krw += buy_val
-            total_now_krw += current_val
-
-        # 미국 주식
         elif stock['type'] == "US":
-            price = get_us_stock(stock['code'])
-            if not price:
-                report.append(f"❌ {stock['name']}: 로딩 실패")
-                continue
-                
+            price, hist = get_us_stock_data(stock['code'])
+            if not price: continue
             current_price = price
-            
-            # 달러 -> 원화 환산하여 합산
+            if hist is not None and len(hist) > 14:
+                rsi_val = calculate_rsi(hist)
+
+        # 2. 가치 계산
+        current_val_krw = 0
+        buy_val_krw = 0
+        if stock['type'] == "KR":
+            current_val_krw = current_price * stock['qty']
+            buy_val_krw = stock['buy_price'] * stock['qty']
+        else:
             current_val_krw = (current_price * usd_rate) * stock['qty']
             buy_val_krw = (stock['buy_price'] * usd_rate) * stock['qty']
             
-            profit_rate = ((current_price - stock['buy_price']) / stock['buy_price']) * 100
-            
-            line = f"🇺🇸 {stock['name']}: ${current_price:,.2f} ({profit_rate:+.1f}%)"
-            
-            total_buy_krw += buy_val_krw
-            total_now_krw += current_val_krw
+        total_buy_krw += buy_val_krw
+        total_now_krw += current_val_krw
         
-        # 이모지 추가 (수익:🔴, 손실:🔵)
-        icon = "🔴" if profit_rate > 0 else "🔵"
-        report.append(f"{icon} {line}")
+        profit_rate = ((current_price - stock['buy_price']) / stock['buy_price']) * 100
+        
+        # 3. 조언 및 우선순위 획득
+        advice, priority = get_investment_opinion(profit_rate, rsi_val)
+        
+        # 정렬을 위해 딕셔너리로 저장
+        stock_info = {
+            'name': stock['name'],
+            'profit_rate': profit_rate,
+            'rsi': rsi_val,
+            'advice': advice,
+            'priority': priority
+        }
+        portfolio_data.append(stock_info)
 
-    # 3. 전체 계좌 요약
+    # ==========================================
+    # [핵심] 정렬 로직 (Sorting Algorithm)
+    # 1순위: Priority (긴급한 것 위로)
+    # 2순위: Profit Rate (수익률 낮은 순서대로 - 아픈 손가락 먼저)
+    # ==========================================
+    portfolio_data.sort(key=lambda x: (x['priority'], x['profit_rate']))
+
+    # 리포트 문자열 생성
+    report_lines = []
+    report_lines.append(f"💵 환율: ${usd_rate:,.1f}원\n")
+
+    for item in portfolio_data:
+        rsi_str = f"(RSI:{item['rsi']:.0f})" if item['rsi'] else ""
+        icon = "🔴" if item['profit_rate'] > 0 else "🔵"
+        
+        # 이름 길이 조절
+        name = item['name']
+        if len(name) > 8: name = name[:8] + ".."
+        
+        line = f"{icon} {name}: {item['profit_rate']:+.1f}% {rsi_str}\n"
+        line += f"   └ {item['advice']}"
+        report_lines.append(line)
+
+    # 전체 요약
     total_profit_rate = 0
     if total_buy_krw > 0:
         total_profit_rate = ((total_now_krw - total_buy_krw) / total_buy_krw) * 100
     total_diff = total_now_krw - total_buy_krw
     
     summary = f"""
-📊 [자산 현황 보고]
+📊 [AI 투자 어드바이저]
 총 자산: {int(total_now_krw):,}원
-총 손익: {int(total_diff):+,}원 ({total_profit_rate:+.2f}%)
+평가 손익: {int(total_diff):+,}원 ({total_profit_rate:+.2f}%)
     """
-    return summary + "\n" + "\n".join(report)
+    return summary + "\n" + "\n".join(report_lines)
 
 def get_news_list():
-    """뉴스 크롤링 (기존 유지)"""
     url = "https://news.naver.com/section/101"
     try:
         res = requests.get(url, headers=HEADERS)
@@ -159,7 +216,7 @@ def get_news_list():
         if res.status_code == 200:
             soup = BeautifulSoup(res.text, 'html.parser')
             main_section = soup.find("div", class_="_SECTION_HEADLINE_LIST")
-            if not main_section: main_section = soup.find("ul", class_="sa_list")
+            if not main_section: main_section = soup.find("ul", class_="sa_list_news")
             if main_section:
                 tags = main_section.find_all('strong', class_='sa_text_strong')
                 for i, tag in enumerate(tags[:5]):
@@ -174,25 +231,26 @@ def send_telegram(message):
     params = {'chat_id': CHAT_ID, 'text': message}
     try:
         requests.get(send_url, params=params)
-        print("전송 완료!")
     except:
-        print("전송 실패")
+        pass
 
 if __name__ == "__main__":
     now_utc = datetime.datetime.utcnow()
     now_kst = now_utc + datetime.timedelta(hours=9)
     today = now_kst.strftime("%Y년 %m월 %d일")
     
-    print("분석 시작...")
+    print("분석 및 정렬 중...")
     portfolio_report = analyze_portfolio()
     news_report = get_news_list()
     
     final_message = f"""
-💰 [{today} 투자 비서 리포트]
+🤖 [{today} JARVIS 투자 브리핑]
 
 {portfolio_report}
 
 📰 [주요 경제 뉴스]
 {news_report}
+
+* RSI 기반 우선순위 정렬 완료
     """
     send_telegram(final_message)
