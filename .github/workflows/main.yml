@@ -26,11 +26,13 @@ jobs:
       - name: 라이브러리 설치하기
         run: |
           pip install -r requirements.txt
+          pip install python-dotenv
 
       - name: 봇 실행하기
         env:
           # 금고(Secrets)에서 꺼내서 환경변수로 넣어줌
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           python main.py

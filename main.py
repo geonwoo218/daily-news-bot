@@ -6,13 +6,16 @@ import yfinance as yf
 import pandas as pd
 from bs4 import BeautifulSoup
 import google.generativeai as genai
+from dotenv import load_dotenv
+
 
 # ==========================================
 # [설정] 키 입력 (보안 주의!)
 # ==========================================
-# 테스트용이라면 직접 입력해도 되지만, 꼭 비밀로 관리하세요!
+TELEGRAM_TOKEN = "여기에_텔레그램_토큰을_입력하세요"
 GEMINI_API_KEY = "여기에_구글_AI_키를_입력하세요"
 
+load_dotenv()
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') 
 CHAT_ID = os.environ.get('CHAT_ID')
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
