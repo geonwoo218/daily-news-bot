@@ -21,7 +21,12 @@
 2.  환경 변수 설정 (또는 코드 내 입력)
     * `TELEGRAM_TOKEN`: 봇 파더에게 받은 토큰
     * `CHAT_ID`: 본인의 챗 ID
-
+    * `GEMINI_AP_KEY`:본인의 제미나이 API키
 ### 2. 실행 (Run)
 ```bash
 python main.py
+init_db.py : 초기 데이터 생성하는 코드 한번만 실행하면 됨
+portfoli.json : 내 데이터 저장 되어있음
+텔레그렘 대화창에
+보고 : 포트폴리오 가지고 보고함
+뉴스 : 현재 뉴스들 가지고  AI가 요약 보고함
