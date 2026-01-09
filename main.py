@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import os
-import yfinance as yf # 야후 파이낸스 라이브러리 추가
+import yfinance as yf
 
 # ==========================================
 # [설정] 텔레그램 토큰 & Chat ID
@@ -14,7 +14,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 CHAT_ID = os.environ.get('CHAT_ID')
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
 }
 
 # 💰 [내 포트폴리오] 
