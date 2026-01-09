@@ -3,8 +3,6 @@ import os
 
 DB_FILE = "portfolio.json"
 
-# 이미지에서 추출한 최신 포트폴리오 데이터
-# (수량과 평단가를 이미지에 나온 그대로 업데이트했습니다)
 INITIAL_DATA = [
     {"name": "리게티 컴퓨팅", "type": "US", "code": "RGTI", "buy_price": 40.74, "qty": 7.0},
     {"name": "아이렌(IREN)", "type": "US", "code": "IREN", "buy_price": 55.59, "qty": 2.49},
