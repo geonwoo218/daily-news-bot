@@ -14,7 +14,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 CHAT_ID = os.environ.get('CHAT_ID')
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0'
 }
 
 # 💰 [내 포트폴리오] 
@@ -233,7 +233,7 @@ def get_news_list():
         if res.status_code == 200:
             soup = BeautifulSoup(res.text, 'html.parser')
             main_section = soup.find("div", class_="_SECTION_HEADLINE_LIST")
-            if not main_section: main_section = soup.find("ul", class_="sa_list_news")
+            if not main_section: main_section = soup.find("ul", class_="sa_list")
             if main_section:
                 tags = main_section.find_all('strong', class_='sa_text_strong')
                 for i, tag in enumerate(tags[:5]):
